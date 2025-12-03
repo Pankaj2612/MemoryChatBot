@@ -3,7 +3,7 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 
-prompt = """{
+memory_prompt = """{
   "task": "Analyze user messages and extract emotional patterns, preferences, and factual info worth remembering.",
   "taskRules": [
     "Analyze ALL messages before output.",
@@ -21,7 +21,7 @@ prompt = """{
     ]
   },
   "inputFormat": {
-    ["message_1", "...", "message_30"]
+    "messages" : ["message_1", "...", "message_30"]
   },
   "outputSchema": {
     "emotional_pattern": "string",
@@ -90,15 +90,18 @@ client = OpenAI(
 
 
 def extract_user_memory(messages):
-
+    print(memory_prompt)
     response = client.chat.completions.create(
         model="x-ai/grok-4.1-fast:free",
         messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": messages},
+            {"role": "system", "content": memory_prompt},
+            {"role": "user", "content": json.dumps({"messages": messages})},
         ],
-        temperature=0.4,
+        temperature=0.1,
+      
     )
+    print(messages)
+    print(response.choices[0].message.content)
     memory_json = response.choices[0].message.content
     try:
         memory_data = json.loads(memory_json)
@@ -114,7 +117,8 @@ def generate_raw_reply(question):
         messages=[
             {"role": "user", "content": question},
         ],
-        temperature=0.4,
+        temperature=0.7,
+        max_tokens=300,
     )
     return response.choices[0].message.content
 
@@ -133,6 +137,7 @@ def generate_memory_aware_reply(user_memory, question):
             },
             {"role": "user", "content": full_prompt},
         ],
-        temperature=0.4,
+        temperature=0.7,
+        max_tokens=400,
     )
     return response.choices[0].message.content
