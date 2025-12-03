@@ -1,6 +1,7 @@
 import json
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 
 prompt = """{
   "task": "Analyze user messages and extract emotional patterns, preferences, and factual info worth remembering.",
@@ -80,6 +81,7 @@ YOU ARE A PERSONALITY ENGINE. YOUR JOB IS TO SHAPE THE AI’S REPLY TONE BASED O
 **Tone:** “It’s okay. I’m here. Let’s slow things down together.”
 """
 
+load_dotenv()
 
 client = OpenAI(
     api_key=os.getenv("OPENAI_API_KEY"),
@@ -90,13 +92,12 @@ client = OpenAI(
 def extract_user_memory(messages):
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="x-ai/grok-4.1-fast:free",
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": messages},
         ],
-        temperature=0.2,
-        max_tokens=500,
+        temperature=0.4,
     )
     memory_json = response.choices[0].message.content
     try:
@@ -109,12 +110,11 @@ def extract_user_memory(messages):
 def generate_raw_reply(question):
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="x-ai/grok-4.1-fast:free",
         messages=[
             {"role": "user", "content": question},
         ],
         temperature=0.4,
-        max_tokens=300,
     )
     return response.choices[0].message.content
 
@@ -125,7 +125,7 @@ def generate_memory_aware_reply(user_memory, question):
     full_prompt = f"{memory_context}\n\nQuestion: {question}"
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model="x-ai/grok-4.1-fast:free",
         messages=[
             {
                 "role": "system",
@@ -134,6 +134,5 @@ def generate_memory_aware_reply(user_memory, question):
             {"role": "user", "content": full_prompt},
         ],
         temperature=0.4,
-        max_tokens=300,
     )
     return response.choices[0].message.content
